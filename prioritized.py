@@ -31,9 +31,18 @@ class PrioritizedPlanningSolver(object):
         constraints = []
         ### custom constraints
         # guided constraint for task 1.2
-        constraints.append(self.create_constraint(0, [(1, 5)], 4))
+        # constraints.append(self.create_constraint(0, [(1, 5)], 4))
         # guided constraint for task 1.3
-        constraints.append(self.create_constraint(1, [(1, 2),(1,3)], 1))
+        # constraints.append(self.create_constraint(1, [(1, 2),(1,3)], 1))
+        # guided constraint for task 1.4
+        # constraints.append(self.create_constraint(0, [(1, 5)], 10))
+        # constraints for minimal path in task 1.5
+        # Minimal path length is 8
+        # The constraints force agent 1 to drop to the small corridor in the maze, in order to let agent 0 pass him,
+        # so that they can each avoid any collision on their path to their respective goal
+        constraints.append(self.create_constraint(1, [(1, 2)], 2))
+        constraints.append(self.create_constraint(1, [(1, 3)], 2))
+        constraints.append(self.create_constraint(1, [(1, 4)], 2))
         ### /custom constraints
 
         for i in range(self.num_of_agents):  # Find path for each agent

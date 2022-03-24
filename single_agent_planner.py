@@ -148,7 +148,16 @@ def a_star(my_map, start_loc, goal_loc, h_values, agent, constraints):
         #############################
         # Task 1.4: Adjust the goal test condition to handle goal constraints
         if curr['loc'] == goal_loc:
-            return get_path(curr)
+            legal_path = True
+            if curr['timestep_value'] + 1 < len(constraint_table):
+                # There are future constraints for the agent, need to make sure we don't finish until we handle them all
+                for i in range(curr['timestep_value'] + 1, len(constraint_table)):
+                    if is_constrained(goal_loc, goal_loc, i, constraint_table):
+                        # The agent can't be at the goal in a future timestep, so we can't end the run here, and this is not a correct solution
+                        legal_path = False
+                        break
+            if legal_path:
+                return get_path(curr)
         for dir in range(5):
             child_loc = move(curr['loc'], dir)
             if my_map[child_loc[0]][child_loc[1]] or is_constrained(curr['loc'], child_loc, curr['timestep_value'] + 1, constraint_table):
