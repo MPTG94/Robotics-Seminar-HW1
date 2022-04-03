@@ -29,6 +29,7 @@ class PrioritizedPlanningSolver(object):
         start_time = timer.time()
         result = []
         constraints = []
+        max_solution_time = 0
         ### custom constraints
         # guided constraint for task 1.2
         # constraints.append(self.create_constraint(0, [(1, 5)], 4))
@@ -40,12 +41,15 @@ class PrioritizedPlanningSolver(object):
         # Minimal path length is 8
         # The constraints force agent 1 to drop to the small corridor in the maze, in order to let agent 0 pass him,
         # so that they can each avoid any collision on their path to their respective goal
-        constraints.append(self.create_constraint(1, [(1, 2)], 2))
-        constraints.append(self.create_constraint(1, [(1, 3)], 2))
-        constraints.append(self.create_constraint(1, [(1, 4)], 2))
+        # constraints.append(self.create_constraint(1, [(1, 2)], 2))
+        # constraints.append(self.create_constraint(1, [(1, 3)], 2))
+        # constraints.append(self.create_constraint(1, [(1, 4)], 2))
         ### /custom constraints
 
         for i in range(self.num_of_agents):  # Find path for each agent
+            # There can only be as many steps as the size of the board, we add the maximal number of
+            # steps an agent will make to buffer cases where agent need extra steps to avoid collisions
+            max_number_of_timesteps = max_solution_time + len(self.my_map) * len(self.my_map[0])
             path = a_star(self.my_map, self.starts[i], self.goals[i], self.heuristics[i],
                           i, constraints)
             if path is None:
@@ -58,7 +62,23 @@ class PrioritizedPlanningSolver(object):
             #            * path contains the solution path of the current (i'th) agent, e.g., [(1,1),(1,2),(1,3)]
             #            * self.num_of_agents has the number of total agents
             #            * constraints: array of constraints to consider for future A* searches
-
+            # If this agent takes longer than all previous agents to reach his goal we update
+            max_solution_time = max_solution_time if max_solution_time > len(path) else len(path)
+            for timestep in range(max_number_of_timesteps + 1):
+                for agent_index in range(i, self.num_of_agents):
+                    # Add a vertex constraint to each future agent in the runtime of the current agent
+                    if timestep < len(path):
+                        constraints.append(self.create_constraint(agent_index, [path[timestep]], timestep))
+                        ### Part 2.2
+                        # Add edge constraints to each future agent
+                        if timestep > 0:
+                            constraints.append(
+                                self.create_constraint(agent_index, [path[timestep], path[timestep - 1]], timestep))
+                        ### /Part 2.2
+                    else:
+                        # Add a vertex constraint to each future agent, even after the current agent has
+                        # finished his run
+                        constraints.append(self.create_constraint(agent_index, [path[-1]], timestep))
             ##############################
 
         self.CPU_time = timer.time() - start_time
@@ -71,4 +91,5 @@ class PrioritizedPlanningSolver(object):
 
     @staticmethod
     def create_constraint(agent: int, loc: list[tuple], timestep: int):
+        # print(f'Agent {agent} can\'t occupy {loc} at timestep: {timestep}')
         return {'agent': agent, 'loc': loc, 'timestep': timestep}
