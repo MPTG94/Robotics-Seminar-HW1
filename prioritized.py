@@ -52,7 +52,7 @@ class PrioritizedPlanningSolver(object):
             max_number_of_timesteps = max_solution_time + len(self.my_map) * len(self.my_map[0])
             path = a_star(self.my_map, self.starts[i], self.goals[i], self.heuristics[i],
                           i, constraints)
-            if path is None:
+            if path is None or len(path) >= max_number_of_timesteps:
                 raise BaseException('No solutions')
             result.append(path)
 
